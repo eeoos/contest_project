@@ -1,7 +1,10 @@
 package core.contest5.member.domain;
 
 
+import core.contest5.member.domain.memberinfo.MemberRole;
 import core.contest5.member.service.MemberInfo;
+
+import java.util.Set;
 
 public record SignUpRequest(
         String email,
@@ -14,7 +17,17 @@ public record SignUpRequest(
                 email,
                 name,
                 profileImage,
-                MemberRole.GUEST
+                MemberRole.GUEST,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Set.of(),
+                Set.of(),
+                Set.of(),
+                Set.of()
+
         );
     }
 }

@@ -1,5 +1,6 @@
 package core.contest5.post.api;
 
+import core.contest5.global.exception.NoSearchResultsException;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.post.domain.*;
 import core.contest5.post.service.PostDomain;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,7 +25,7 @@ public class PostController {
     @PostMapping("/posts")
     public ResponseEntity<Long> createPost(@RequestBody CreatePostRequest postRequest,
                                            @AuthenticationPrincipal MemberDomain memberDomain) {
-        Long createdPostId = postService.writePost(postRequest.toPostInfo(), memberDomain.id());
+        Long createdPostId = postService.writePost(postRequest.toPostInfo(), memberDomain.getId());
         return ResponseEntity.ok(createdPostId);
     }
 
@@ -45,6 +47,46 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @GetMapping("/posts")
+    public ResponseEntity<List<PostResponse>> getPosts(
+            @RequestParam(required = false) Set<PostField> fields,
+            @RequestParam(required = false, defaultValue = "LATEST") SortOption sortOption) {
+        List<PostDomain> posts = postService.getPosts(fields, sortOption);
+        return ResponseEntity.ok(posts.stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList()));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<?> searchPosts(@RequestParam String keyword) {
+        try {
+            List<PostResponse> searchResults = postService.searchPosts(keyword)
+                    .stream()
+                    .map(PostResponse::from)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(searchResults);
+        } catch (NoSearchResultsException e) {
+            return ResponseEntity.ok(Collections.singletonMap("message", e.getMessage()));
+        }
+    }
+
+    /*@GetMapping("/posts")
+    public ResponseEntity<List<PostResponse>> getPosts(
+            @RequestParam(required = false) Set<PostField> fields
+
+    ) {
+        List<PostDomain> posts;
+        if (fields != null && !fields.isEmpty()) {
+            posts = postService.getPostsByFields(fields);
+        } else {
+            posts = postService.getPosts();
+        }
+        return ResponseEntity.ok(posts.stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList()));
+    }
+
+
     @GetMapping("/posts")
     public ResponseEntity<List<PostResponse>> getPosts() {
         List<PostDomain> posts = postService.getPosts();
@@ -61,5 +103,5 @@ public class PostController {
                 .map(PostResponse::from)
                 .collect(Collectors.toList()));
 
-    }
+    }*/
 }

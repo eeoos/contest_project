@@ -3,6 +3,7 @@ package core.contest5.post.domain;
 import core.contest5.member.domain.MemberResponse;
 import core.contest5.post.service.PostDomain;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 public record PostResponse(
@@ -11,9 +12,9 @@ public record PostResponse(
 
         Long bookmarkCount,
 
-        String startDate,
+        LocalDateTime startDate,
 
-        String endDate,
+        LocalDateTime endDate,
 
         String posterImage,
 

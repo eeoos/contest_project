@@ -1,9 +1,11 @@
 package core.contest5.post.service;
 
+import core.contest5.global.exception.NoSearchResultsException;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberReader;
 import core.contest5.post.domain.PostField;
 import core.contest5.post.domain.PostResponse;
+import core.contest5.post.domain.SortOption;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,8 +43,23 @@ public class PostService {
     public void deletePost(Long postId) {
         postRepository.delete(postId);
     }
+    public List<PostDomain> getPosts(Set<PostField> fields, SortOption sortOption) {
+        if (fields != null && !fields.isEmpty()) {
+            return postRepository.findByPostFieldsIn(fields, sortOption);
+        } else {
+            return postRepository.findAllSorted(sortOption);
+        }
+    }
 
-    public List<PostDomain> getPosts() {
+    public List<PostDomain> searchPosts(String keyword) {
+        List<PostDomain> searchResults = postRepository.searchPosts(keyword);
+        if (searchResults.isEmpty()) {
+            throw new NoSearchResultsException("검색 결과가 없습니다.");
+        }
+        return searchResults;
+    }
+
+    /*public List<PostDomain> getPosts() {
         return postRepository.findAll();
 
     }
@@ -52,5 +69,5 @@ public class PostService {
 //        return postDomainListByFields.stream()
 //                .map(PostResponse::from)
 //                .collect(Collectors.toList());
-    }
+    }*/
 }

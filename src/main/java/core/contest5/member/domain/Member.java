@@ -1,6 +1,7 @@
 package core.contest5.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import core.contest5.member.domain.memberinfo.*;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberInfo;
 import lombok.AllArgsConstructor;
@@ -12,8 +13,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor
@@ -40,6 +44,7 @@ public class Member implements UserDetails {
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
+
         return Collections.singleton(new SimpleGrantedAuthority(this.memberRole.getAuthority()));
     }
 
@@ -79,6 +84,60 @@ public class Member implements UserDetails {
         return true;
     }
 
+    @OneToOne
+    @JoinColumn(name = "member_field_id")
+    private MemberField memberField; // 관심 분야
+
+    @OneToOne
+    @JoinColumn(name = "member_duty_id")
+    private MemberDuty memberDuty; // 역할(직무)
+
+    @Enumerated(EnumType.STRING)
+    private Grade grade; // 학년
+
+    private String school; //학교 (관리자가 입력)
+    private String major; //학과 (관리자가 입력)
+
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TechStack> techStacks;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Certificate> certificates;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ContestEntry> contestEntries;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Award> awards;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    /*public void addTechStack(TechStack techStack) {
+        techStacks.add(techStack);
+        techStack.setMember(this);
+    }
+
+    public void removeTechStack(TechStack techStack) {
+        techStacks.remove(techStack);
+        techStack.setMember(null);
+    }*/
+
     public MemberDomain toDomain() {
         return new MemberDomain(
                 id,
@@ -86,19 +145,43 @@ public class Member implements UserDetails {
                         email,
                         name,
                         profileImage,
-                        memberRole
-                )
+                        memberRole,
+                        memberField,
+                        memberDuty,
+                        grade,
+                        school,
+                        major,
+                        techStacks,
+                        certificates,
+                        contestEntries,
+                        awards
+                ),
+
+                createdAt,
+                updatedAt
         );
     }
 
     public static Member from(MemberDomain domain) {
         return Member.builder()
-                .id(domain.id())
-                .email(domain.info().email())
-                .name(domain.info().name())
-                .memberRole(domain.info().memberRole())
-                .profileImage(domain.info().profileImage())
+                .id(domain.getId())
+                .email(domain.getMemberInfo().email())
+                .name(domain.getMemberInfo().name())
+                .memberRole(domain.getMemberInfo().memberRole())
+                .profileImage(domain.getMemberInfo().profileImage())
+                .memberField(domain.getMemberInfo().memberField())
+                .memberDuty(domain.getMemberInfo().memberDuty())
+                .grade(domain.getMemberInfo().grade())
+                .school(domain.getMemberInfo().school())
+                .major(domain.getMemberInfo().major())
+                .techStacks(domain.getMemberInfo().techStacks())
+                .certificates(domain.getMemberInfo().certificates())
+                .contestEntries(domain.getMemberInfo().contestEntries())
+                .awards(domain.getMemberInfo().awards())
+                .createdAt(domain.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
                 .build();
+
     }
     public static Member from(Long userId) {
         return Member.builder()

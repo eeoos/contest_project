@@ -4,9 +4,12 @@ import core.contest5.member.domain.Member;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.post.domain.Post;
 import core.contest5.post.domain.PostField;
+import core.contest5.post.domain.SortOption;
 import core.contest5.post.service.PostDomain;
 import core.contest5.post.service.PostInfo;
 import core.contest5.post.service.PostRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +21,9 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class PostRepositoryImpl implements PostRepository {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final PostJpaRepository postJpaRepository;
     @Override
@@ -85,6 +91,56 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    public List<PostDomain> findAllSorted(SortOption sortOption) {
+        List<Post> posts;
+        switch (sortOption) {
+            case LATEST:
+                posts = postJpaRepository.findAllByOrderByCreatedAtDesc();
+                break;
+            case MOST_BOOKMARKS:
+                posts = postJpaRepository.findAllByOrderByBookmarkCountDesc();
+                break;
+            case MOST_AWAITERS:
+                posts = postJpaRepository.findAllOrderByAwaiterCountDesc();
+                break;
+            /*case MOST_REVIEWS:
+                posts = postJpaRepository.findAllByOrderByReviewCountDesc();
+                break;*/
+            case CLOSEST_DEADLINE:
+                posts = postJpaRepository.findAllByOrderByEndDateAsc();
+                break;
+            default:
+                posts = postJpaRepository.findAll();
+        }
+        return posts.stream().map(Post::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostDomain> findByPostFieldsIn(Set<PostField> fields, SortOption sortOption) {
+        List<Post> posts;
+        switch (sortOption) {
+            case LATEST:
+                posts = postJpaRepository.findByPostFieldsInOrderByCreatedAtDesc(fields);
+                break;
+            case MOST_BOOKMARKS:
+                posts = postJpaRepository.findByPostFieldsInOrderByBookmarkCountDesc(fields);
+                break;
+            case MOST_AWAITERS:
+                posts = postJpaRepository.findByPostFieldsInOrderByAwaiterCountDesc(fields);
+                break;
+            /*case MOST_REVIEWS:
+                posts = postJpaRepository.findByPostFieldsInOrderByReviewCountDesc(fields);
+                break;*/
+            case CLOSEST_DEADLINE:
+                posts = postJpaRepository.findByPostFieldsInOrderByEndDateAsc(fields);
+                break;
+            default:
+                posts = postJpaRepository.findByPostFieldsIn(fields);
+        }
+        return posts.stream().map(Post::toDomain).collect(Collectors.toList());
+    }
+
+    /*@Override
     public List<PostDomain> findAll() {
         List<Post> posts = postJpaRepository.findAll(); //
 
@@ -99,7 +155,7 @@ public class PostRepositoryImpl implements PostRepository {
         return posts.stream()
                 .map(Post::toDomain)
                 .collect(Collectors.toList());
-    }
+    }*/
 
     @Override
     public void incrementViewCount(Long postId) {
@@ -117,5 +173,29 @@ public class PostRepositoryImpl implements PostRepository {
         );
         postJpaRepository.incrementBookmarkCount(postId);
 
+    }
+
+    @Override
+    public List<PostDomain> searchPosts(String keyword) {
+        String likePattern = "%" + keyword + "%";
+        return entityManager.createQuery(
+                        "SELECT p FROM Post p WHERE " +
+                                "LOWER(p.title) LIKE LOWER(:keyword) OR " +
+                                "LOWER(p.content) LIKE LOWER(:keyword) OR " +
+                                "LOWER(p.host) LIKE LOWER(:keyword) " +
+                                "ORDER BY " +
+                                "CASE " +
+                                "  WHEN LOWER(p.title) = LOWER(:exactKeyword) THEN 1 " +
+                                "  WHEN LOWER(p.title) LIKE LOWER(:startPattern) THEN 2 " +
+                                "  ELSE 3 " +
+                                "END, " +
+                                "p.title ASC", Post.class)
+                .setParameter("keyword", likePattern)
+                .setParameter("exactKeyword", keyword.toLowerCase())
+                .setParameter("startPattern", keyword.toLowerCase() + "%")
+                .getResultList()
+                .stream()
+                .map(Post::toDomain)
+                .collect(Collectors.toList());
     }
 }

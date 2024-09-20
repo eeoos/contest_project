@@ -1,5 +1,6 @@
 package core.contest5.post.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import core.contest5.member.domain.Member;
 import core.contest5.post.service.PostDomain;
 import core.contest5.post.service.PostInfo;
@@ -9,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,13 +37,11 @@ public class Post {
     @Column(name = "bookmark_count")
     private Long bookmarkCount=0L;
 
-    //접수 시작일
-    @Column(name = "start_date")
-    private String startDate;
+    @Column(nullable = false)
+    private LocalDateTime startDate;
 
-    //접수 마감일
-    @Column(name = "end_date")
-    private String endDate; //due?
+    @Column(nullable = false)
+    private LocalDateTime endDate;
 
     @Column(name = "poster_image")
     private String posterImage;
@@ -77,6 +77,24 @@ public class Post {
     @Column(nullable = false)
     private ContestStatus contestStatus;
 
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+
     public static Post from(PostDomain post) {
         return Post.builder()
                 .id(post.getId())
@@ -96,6 +114,8 @@ public class Post {
                 .contestStatus(post.getPostInfo().contestStatus()) //추가
                 .postFields(post.getPostInfo().postFields())
                 .writer(Member.from(post.getMember()))
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
                 .build();
     }
 
@@ -124,7 +144,9 @@ public class Post {
                 viewCount,
                 bookmarkCount,
 //                awaiterList,
-                writer.toDomain()
+                writer.toDomain(),
+                startDate,
+                endDate
         );
     }
     public void setPostFields(Set<PostField> postFields) {

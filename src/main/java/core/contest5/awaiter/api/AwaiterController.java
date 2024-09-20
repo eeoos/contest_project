@@ -6,13 +6,11 @@ import core.contest5.awaiter.domain.AwaiterStatusUpdateDto;
 import core.contest5.awaiter.domain.TeamApplication;
 import core.contest5.awaiter.service.AwaiterService;
 import core.contest5.awaiter.service.TeamApplicationService;
-import core.contest5.member.domain.Member;
 import core.contest5.member.service.MemberDomain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,7 +63,7 @@ public class AwaiterController {
             @PathVariable Long postId,
             @PathVariable Long awaiterId,
             @AuthenticationPrincipal MemberDomain memberDomain) {
-        Long applicantId = memberDomain.id();
+        Long applicantId = memberDomain.getId();
         TeamApplication application = teamApplicationService.applyForTeam(postId, awaiterId, applicantId);
         return ResponseEntity.status(HttpStatus.CREATED).body(application);
     }
@@ -76,7 +74,7 @@ public class AwaiterController {
             @PathVariable Long postId,
             @PathVariable Long awaiterId,
             @AuthenticationPrincipal MemberDomain memberDomain) {
-        Long requesterId = memberDomain.id();
+        Long requesterId = memberDomain.getId();
         awaiterService.deleteAwaiter(postId, awaiterId, requesterId);
         return ResponseEntity.noContent().build();
     }

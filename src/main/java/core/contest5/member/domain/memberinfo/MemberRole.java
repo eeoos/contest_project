@@ -1,4 +1,4 @@
-package core.contest5.member.domain;
+package core.contest5.member.domain.memberinfo;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

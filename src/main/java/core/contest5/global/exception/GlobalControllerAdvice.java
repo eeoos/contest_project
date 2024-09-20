@@ -54,4 +54,10 @@ public class GlobalControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ErrorCode.NOT_FOUND, e.getMessage()));
     }
+
+    @ExceptionHandler(value = NoSearchResultsException.class)
+    public ResponseEntity<?> handleNoSearchResultsException(NoSearchResultsException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ErrorCode.NO_RESULT, e.getMessage()));
+    }
 }

@@ -3,14 +3,15 @@ package core.contest5.post.domain;
 
 import core.contest5.post.service.PostInfo;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 
 public record CreatePostRequest(
         String title,
         String content,
-        String startDate,
-        String endDate,
+        LocalDateTime startDate,
+        LocalDateTime endDate,
 
         String posterImage,
         String qualification,
