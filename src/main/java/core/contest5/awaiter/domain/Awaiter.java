@@ -3,65 +3,78 @@ package core.contest5.awaiter.domain;
 import core.contest5.member.domain.Member;
 import core.contest5.post.domain.Post;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 @Getter
 public class Awaiter {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @EmbeddedId
+    private AwaiterId id;
 
+    @MapsId("postId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @MapsId("memberId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(name = "registration_date")
-    private LocalDateTime registrationDate;/**/
-
-    // 프로필 정보
-    private String profileDescription;
 
     // 팀원 신청 상태
     @Enumerated(EnumType.STRING)
     private ApplicationStatus applicationStatus;
 
+    public Awaiter(Post post, Member member) {
+        this.id = new AwaiterId(member.getId(), post.getId());
+        this.post = post;
+        this.member = member;
+    }
+
     public void updateApplicationStatus(ApplicationStatus newStatus) {
         this.applicationStatus = newStatus;
     }
 
-    public static Awaiter from(AwaiterDomain awaiter) {
+    public static Awaiter from(AwaiterDomain domain) {
         return Awaiter.builder()
-                .id(awaiter.getId())
-                .post(Post.from(awaiter.getPostId()))
-                .member(Member.from(awaiter.getMemberId()))
-                .registrationDate(awaiter.getRegistrationDate())
-                .profileDescription(awaiter.getProfileDescription())
-                .applicationStatus(awaiter.getApplicationStatus())
+                .id(new AwaiterId(domain.getId().getMemberId(), domain.getId().getPostId()))
+                .post(Post.from(domain.getId().getPostId()))
+                .member(Member.from(domain.getId().getMemberId()))
+                .applicationStatus(domain.getApplicationStatus())
                 .build();
     }
 
+
+    public static Awaiter from(AwaiterId id) {
+        return Awaiter.builder()
+                .id(id)
+                .build();
+    }
     public AwaiterDomain toDomain() {
         return new AwaiterDomain(
                 id,
-                post.getId(),
-                member.getId(),
-                registrationDate,
-                profileDescription,
+                post.toDomain(),
+                member.toDomain(),
                 applicationStatus
         );
     }
+
+    // 관계 변경을 위한 메서드
+    public void changePost(Post newPost) {
+        if (this.post != null) {
+            this.post.getAwaiters().remove(this);
+        }
+        this.post = newPost;
+        if (newPost != null) {
+            newPost.getAwaiters().add(this);
+        }
+    }
+
 }

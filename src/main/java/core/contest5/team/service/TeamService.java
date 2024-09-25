@@ -4,18 +4,19 @@ import core.contest5.global.exception.ResourceNotFoundException;
 import core.contest5.member.domain.Member;
 import core.contest5.member.domain.MemberResponse;
 import core.contest5.member.repository.MemberJpaRepository;
+import core.contest5.member.service.MemberDomain;
+import core.contest5.member.service.MemberReader;
 import core.contest5.member.service.MemberRepository;
-import core.contest5.team.domain.Team;
-import core.contest5.team.domain.TeamCreateRequestDto;
-import core.contest5.team.domain.TeamResponseDto;
-import core.contest5.team.repository.TeamRepository;
+import core.contest5.team.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,44 +24,55 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TeamService {
     private final TeamRepository teamRepository;
-    private final MemberJpaRepository memberRepository;
-
+    private final MemberReader memberReader;
+    private final TeamMemberRepository teamMemberRepository;
     @Transactional
-    public TeamResponseDto createTeam(TeamCreateRequestDto requestDto) {
-        Optional<Member> optionalLeader = memberRepository.findById(requestDto.getLeaderId());
-        Member leader = optionalLeader.get();
+    public TeamDomain createTeam(TeamCreateRequestDto requestDto) {
 
+        MemberDomain leader = memberReader.read(requestDto.getLeaderId());
         log.info("leader={}", leader);
 
-        Team team = Team.builder()
+        TeamDomain teamDomain = TeamDomain.builder()
                 .name(requestDto.getName())
-                .leader(leader)
+                .leaderId(leader.getId())
                 .description(requestDto.getDescription())
                 .build();
 
-        Team savedTeam = teamRepository.save(team);
-        return convertToDto(savedTeam);
+        //팀을 먼저 저장한 후,
+        TeamDomain savedTeamDomain = teamRepository.save(teamDomain);
+
+        //leader를 teamMember로 생성 후 저장
+        TeamMemberDomain leaderMember = TeamMemberDomain.builder()
+                .team(savedTeamDomain)
+                .member(leader)
+                .joinDate(LocalDateTime.now())
+                .role(TeamMemberRole.LEADER)
+                .build();
+
+        TeamMemberDomain savedLeaderMember = teamMemberRepository.save(leaderMember);
+
+        //저장된 teamMember를 team에 추가
+        savedTeamDomain.addMember(savedLeaderMember);
+
+        return savedTeamDomain;
     }
 
-    public List<MemberResponse> getTeamMembers(Long teamId) {
+    public TeamDomain getTeam(Long teamId) {
+        return teamRepository.findById(teamId);
+    }
+    public TeamMemberDomain getTeamMemberProfile(Long teamId, Long memberId) {
+        TeamMemberId id = new TeamMemberId(teamId, memberId);
+        return teamMemberRepository.findById(id);
+    }
+
+
+    /*public List<MemberResponse> getTeamMembers(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
 
         return team.getMembers().stream()
                 .map(this::convertToMemberDto)
                 .collect(Collectors.toList());
-    }
-
-    public MemberResponse getTeamMemberProfile(Long teamId, Long memberId) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
-
-        Member member = team.getMembers().stream()
-                .filter(m -> m.getId().equals(memberId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Member not found in the team"));
-
-        return convertToMemberDto(member);
     }
 
     private TeamResponseDto convertToDto(Team team) {
@@ -81,5 +93,5 @@ public class TeamService {
                 .profileImage(member.getProfileImage())
                 .role(member.getMemberRole())
                 .build();
-    }
+    }*/
 }

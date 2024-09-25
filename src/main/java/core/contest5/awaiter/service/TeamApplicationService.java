@@ -1,70 +1,70 @@
 package core.contest5.awaiter.service;
 
-import core.contest5.awaiter.domain.ApplicationStatus;
-import core.contest5.awaiter.domain.Awaiter;
-import core.contest5.awaiter.domain.TeamApplication;
-import core.contest5.awaiter.repository.AwaiterRepository;
-import core.contest5.awaiter.repository.TeamApplicationRepository;
-import core.contest5.global.exception.ResourceNotFoundException;
-import core.contest5.member.domain.Member;
-import core.contest5.member.repository.MemberJpaRepository;
-import core.contest5.member.service.MemberRepository;
-import core.contest5.post.domain.Post;
-import core.contest5.post.repository.PostJpaRepository;
-import core.contest5.post.service.PostRepository;
+import core.contest5.awaiter.domain.*;
+import core.contest5.member.service.MemberDomain;
+import core.contest5.member.service.MemberReader;
+import core.contest5.post.service.PostDomain;
+import core.contest5.post.service.PostReader;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
 public class TeamApplicationService {
     private final TeamApplicationRepository teamApplicationRepository;
-    private final PostRepository postRepository;
-    private final PostJpaRepository postJpaRepository;
-    private final MemberRepository memberRepository;
-    private final MemberJpaRepository memberJpaRepository;
+    private final MemberReader memberReader;
+    private final PostReader postReader;
     private final AwaiterRepository awaiterRepository;
 
     @Transactional
-    public TeamApplication applyForTeam(Long postId, Long awaiterId, Long applicantId) {
+    public void applyForTeam(Long postId, Long awaiterId, Long applicantId) {
 
-        Optional<Awaiter> optionalAwaiter = awaiterRepository.findById(awaiterId);
-        Awaiter awaiter = optionalAwaiter.get(); //??
+        AwaiterId postIdAndAwaiterId = new AwaiterId(awaiterId, postId);
 
-        Post post = postJpaRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        AwaiterDomain awaiterDomain = awaiterRepository.findById(postIdAndAwaiterId);
+        if (awaiterDomain == null) {
+            throw new EntityNotFoundException("Awaiter not found");
+        }
 
-        Member awaiterMember = memberJpaRepository.findById(awaiter.getMember().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Awaiter not found"));
+        PostDomain postDomain = postReader.read(postId);
+        if (postDomain == null) {
+            throw new EntityNotFoundException("Post not found");
+        }
 
-        Member applicant = memberJpaRepository.findById(applicantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Applicant not found"));
+        MemberDomain awaiterMemberDomain = memberReader.read(awaiterId);
+        MemberDomain applicantMemberDomain = memberReader.read(applicantId);
+        if (awaiterMemberDomain == null || applicantMemberDomain == null) {
+            throw new EntityNotFoundException("Member not found");
+        }
 
         // Check if the awaiter is actually in the awaiter list for this post
-        if (!awaiterRepository.existsByPostAndMember(post, awaiterMember)) {
+        if (!awaiterRepository.existsById(postIdAndAwaiterId)) {
             throw new IllegalStateException("포스트 대기 목록에서 유저를 찾을 수 없습니다.");
         }
+        TeamApplicationId teamApplicationId = new TeamApplicationId(postDomain.getId(), applicantMemberDomain.getId(), awaiterMemberDomain.getId());
 
         // Check if an application already exists
-        Optional<TeamApplication> existingApplication = teamApplicationRepository
-                .findByPostAndApplicantAndAwaiter(post, applicant, awaiterMember);
 
-        if (existingApplication.isPresent()) {
-            throw new IllegalStateException("Application already exists");
+        if (teamApplicationRepository.existsById(teamApplicationId)) {
+            throw new IllegalStateException("신청이 이미 존재합니다.");
         }
 
-        TeamApplication application = TeamApplication.builder()
-                .post(post)
-                .applicant(applicant)
-                .awaiter(awaiterMember)
-                .applicationDate(LocalDateTime.now())
-                .status(ApplicationStatus.PENDING)
-                .build();
+        // Application doesn't exist, so we can create a new one
+        TeamApplicationDomain newApplication = new TeamApplicationDomain(
+                teamApplicationId,
+                postDomain,
+                applicantMemberDomain,
+                awaiterMemberDomain,
+                LocalDateTime.now(),
+                ApplicationStatus.PENDING
+        );
 
-        return teamApplicationRepository.save(application);
+        teamApplicationRepository.save(newApplication);
     }
 }
+

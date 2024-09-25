@@ -6,7 +6,7 @@ import core.contest5.member.service.MemberInfo;
 
 import java.util.Set;
 
-public record SignUpRequest(
+    public record SignUpRequest(
         String email,
 
         String name,

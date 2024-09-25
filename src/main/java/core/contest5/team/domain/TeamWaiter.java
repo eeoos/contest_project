@@ -13,14 +13,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class TeamWaiter {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
+    @EmbeddedId
+    private TeamWaiterId id;
+
+    @MapsId("postId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @MapsId("teamId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
@@ -32,5 +34,25 @@ public class TeamWaiter {
 
     public void updateApplicationStatus(ApplicationStatus newStatus) {
         this.applicationStatus = newStatus;
+    }
+
+    public TeamWaiterDomain toDomain() {
+        return new TeamWaiterDomain(
+                id,
+                post.toDomain(),
+                team.toDomain(),
+                registrationDate,
+                applicationStatus //
+        );
+    }
+
+    public static TeamWaiter from(TeamWaiterDomain domain) {
+        return TeamWaiter.builder()
+                .id(domain.getId())
+                .post(Post.from(domain.getPost()))
+                .team(Team.from(domain.getTeam()))
+                .registrationDate(domain.getRegistrationDate())
+                .applicationStatus(domain.getApplicationStatus())
+                .build();
     }
 }

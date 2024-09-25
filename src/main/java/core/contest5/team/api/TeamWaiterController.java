@@ -1,5 +1,8 @@
 package core.contest5.team.api;
 
+import core.contest5.member.domain.MemberResponse;
+import core.contest5.team.domain.TeamResponseDto;
+import core.contest5.team.domain.TeamWaiterDomain;
 import core.contest5.team.domain.TeamWaiterRequestDto;
 import core.contest5.team.domain.TeamWaiterResponseDto;
 import core.contest5.team.service.TeamWaiterService;
@@ -16,25 +19,35 @@ import java.util.List;
 public class TeamWaiterController {
     private final TeamWaiterService teamWaiterService;
 
-    @PostMapping("/{postId}/teamWaiterList")
+    @PostMapping("/{postId}/teams")
     public ResponseEntity<TeamWaiterResponseDto> registerTeamWaiter(
             @PathVariable Long postId,
             @RequestBody TeamWaiterRequestDto requestDto) {
-        TeamWaiterResponseDto responseDto = teamWaiterService.registerTeamWaiter(postId, requestDto.getTeamId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        TeamWaiterDomain teamWaiterDomain = teamWaiterService.registerTeamWaiter(postId, requestDto.getTeamId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(TeamWaiterResponseDto.from(teamWaiterDomain));
     }
 
-    @GetMapping("/{postId}/teamWaiterList")
+    @GetMapping("/{postId}/teams")
     public ResponseEntity<List<TeamWaiterResponseDto>> getTeamWaiterList(@PathVariable Long postId) {
-        List<TeamWaiterResponseDto> teamWaiterList = teamWaiterService.getTeamWaiterList(postId);
-        return ResponseEntity.ok(teamWaiterList);
+        List<TeamWaiterDomain> teamWaiterList = teamWaiterService.getTeamWaiterList(postId);
+        return ResponseEntity.ok(teamWaiterList.stream().map(TeamWaiterResponseDto::from).toList());
     }
 
-    @DeleteMapping("/{postId}/teamWaiterList/{teamWaiterId}")
+    @GetMapping("/{postId}/teams/{teamId}")
+    public ResponseEntity<TeamResponseDto> getTeamProfile(@PathVariable Long postId, @PathVariable Long teamId) {
+        TeamWaiterDomain teamProfile = teamWaiterService.getTeamProfile(postId, teamId);
+        return ResponseEntity.ok(TeamResponseDto.from(teamProfile.getTeam()));
+    } // TeamController의 getTeam과 같음
+    // 신청은 TeamController에 구현해야하는가? TeamWaiterController에 구현해야하는가? - 질문
+
+
+
+    @DeleteMapping("/{postId}/teams/{teamId}")
     public ResponseEntity<Void> deleteTeamWaiter(
             @PathVariable Long postId,
-            @PathVariable Long teamWaiterId) {
-        teamWaiterService.deleteTeamWaiter(postId, teamWaiterId);
+            @PathVariable Long teamId) {
+
+        teamWaiterService.deleteTeamWaiter(postId, teamId);
         return ResponseEntity.noContent().build();
     }
 }

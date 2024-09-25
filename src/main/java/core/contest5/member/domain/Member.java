@@ -32,7 +32,6 @@ public class Member implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-
     private String profileImage;
 
     private String name;
@@ -97,7 +96,6 @@ public class Member implements UserDetails {
 
     private String school; //학교 (관리자가 입력)
     private String major; //학과 (관리자가 입력)
-
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TechStack> techStacks;

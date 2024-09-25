@@ -1,6 +1,7 @@
 
 package core.contest5.post.service;
 
+import core.contest5.awaiter.domain.Awaiter;
 import core.contest5.member.service.MemberDomain;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

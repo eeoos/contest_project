@@ -1,6 +1,7 @@
 package core.contest5.post.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import core.contest5.awaiter.domain.Awaiter;
 import core.contest5.member.domain.Member;
 import core.contest5.post.service.PostDomain;
 import core.contest5.post.service.PostInfo;
@@ -31,9 +32,11 @@ public class Post {
 
     private String content;
 
+    @Builder.Default
     @Column(name = "view_count")
     private Long viewCount=0L;
 
+    @Builder.Default
     @Column(name = "bookmark_count")
     private Long bookmarkCount=0L;
 
@@ -68,10 +71,12 @@ public class Post {
     @ElementCollection(targetClass = PostField.class)
     @CollectionTable(name = "post_fields", joinColumns = @JoinColumn(name = "post_id"))
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Set<PostField> postFields = new HashSet<>();
 
-//    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Awaiter> awaiterList = new ArrayList<>(); // 대기자 목록
+    @Builder.Default
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Awaiter> awaiters = new ArrayList<>(); // 대기자 목록
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -110,7 +115,7 @@ public class Post {
                 .host(post.getPostInfo().host())
                 .hostHomepageURL(post.getPostInfo().hostHomepageURL())
                 .postFields(post.getPostInfo().postFields())
-//                .awaiterList(post.getAwaiterList())
+//                .awaiters(post.getAwaiterList())
                 .contestStatus(post.getPostInfo().contestStatus()) //추가
                 .postFields(post.getPostInfo().postFields())
                 .writer(Member.from(post.getMember()))
@@ -143,14 +148,51 @@ public class Post {
                 ),
                 viewCount,
                 bookmarkCount,
-//                awaiterList,
+//                awaiters,
                 writer.toDomain(),
                 startDate,
                 endDate
         );
     }
-    public void setPostFields(Set<PostField> postFields) {
+
+    // 새로운 메서드: 엔티티 업데이트
+    public void updateFrom(PostInfo postInfo) {
+        this.title = postInfo.title();
+        this.content = postInfo.content();
+        this.startDate = postInfo.startDate();
+        this.endDate = postInfo.endDate();
+        this.posterImage = postInfo.posterImage();
+        this.qualification = postInfo.qualification();
+        this.awardScale = postInfo.awardScale();
+        this.host = postInfo.host();
+        this.hostHomepageURL = postInfo.hostHomepageURL();
+        this.contestStatus = postInfo.contestStatus();
+        updatePostFields(postInfo.postFields());
+    }
+
+    // 새로운 메서드: postFields 업데이트
+    private void updatePostFields(Set<PostField> newPostFields) {
         this.postFields.clear();
-        this.postFields.addAll(postFields);
+        this.postFields.addAll(newPostFields);
+    }
+
+    public void updateAwaiters(List<Awaiter> newAwaiters) {
+        this.awaiters.clear();
+        if (newAwaiters != null) {
+            newAwaiters.forEach(awaiter -> awaiter.changePost(this));
+            this.awaiters.addAll(newAwaiters);
+        }
+    }
+
+    // Awaiter 추가 메서드
+    public void addAwaiter(Member member) {
+        Awaiter awaiter = new Awaiter(this, member);
+        this.awaiters.add(awaiter);
+    }
+
+    // Awaiter 제거 메서드
+    public void removeAwaiter(Awaiter awaiter) {
+        this.awaiters.remove(awaiter);
+        awaiter.changePost(null);
     }
 }

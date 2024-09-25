@@ -2,6 +2,7 @@ package core.contest5.post.domain;
 
 import core.contest5.member.domain.MemberResponse;
 import core.contest5.post.service.PostDomain;
+import core.contest5.team.domain.TeamMemberDomain;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -35,4 +36,5 @@ public record PostResponse(
                 MemberResponse.from(domain.getMember())
         );
     }
+
 }

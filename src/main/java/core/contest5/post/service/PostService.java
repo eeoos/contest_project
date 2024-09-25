@@ -1,5 +1,6 @@
 package core.contest5.post.service;
 
+import core.contest5.file.FileService;
 import core.contest5.global.exception.NoSearchResultsException;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberReader;
@@ -9,7 +10,9 @@ import core.contest5.post.domain.SortOption;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,6 +27,7 @@ public class PostService {
     private final PostUpdator postUpdator;
     private final PostRepository postRepository;
     private final PermissionValidator permissionValidator;
+    private final FileService fileService;
     public Long writePost(PostInfo postInfo, Long userId) {
         MemberDomain member = memberReader.read(userId);
         return postAppender.append(postInfo, member);
@@ -34,12 +38,21 @@ public class PostService {
     }
 
 
-    public void updatePost(UpdatedPostInfo updatedInfo){
+    @Transactional
+    public void updatePost(UpdatedPostInfo updatedInfo) throws IOException {
         MemberDomain member = memberReader.read(updatedInfo.memberId());
-        PostDomain post = postReader.read(updatedInfo.postId());
-        permissionValidator.validate(post, member);
-        postUpdator.update(post, updatedInfo);
+        PostDomain existingPost = postReader.read(updatedInfo.postId());
+        permissionValidator.validate(existingPost, member);
+
+        // 새 포스터 이미지가 있고, 기존 이미지와 다른 경우에만 파일 삭제 및 업데이트
+        if (updatedInfo.postInfo().posterImage() != null &&
+                !updatedInfo.postInfo().posterImage().equals(existingPost.getPostInfo().posterImage())) {
+            fileService.deleteFile(existingPost.getPostInfo().posterImage(), "poster");
+        }
+
+        postUpdator.update(existingPost.getId(), updatedInfo.postInfo());
     }
+
     public void deletePost(Long postId) {
         postRepository.delete(postId);
     }

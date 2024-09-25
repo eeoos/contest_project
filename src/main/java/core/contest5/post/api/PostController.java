@@ -1,19 +1,25 @@
 package core.contest5.post.api;
 
+import core.contest5.file.FileService;
 import core.contest5.global.exception.NoSearchResultsException;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.post.domain.*;
 import core.contest5.post.service.PostDomain;
 import core.contest5.post.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,11 +27,15 @@ import java.util.stream.Collectors;
 public class PostController {
 
     private final PostService postService;
+    private final FileService fileService;
 
-    @PostMapping("/posts")
-    public ResponseEntity<Long> createPost(@RequestBody CreatePostRequest postRequest,
-                                           @AuthenticationPrincipal MemberDomain memberDomain) {
-        Long createdPostId = postService.writePost(postRequest.toPostInfo(), memberDomain.getId());
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Long> createPost(
+            @RequestPart CreatePostRequest postRequest,
+            @RequestPart MultipartFile posterImage,
+            @AuthenticationPrincipal MemberDomain memberDomain) throws IOException {
+        String savedFileName = fileService.saveFile(posterImage, "poster");
+        Long createdPostId = postService.writePost(postRequest.toPostInfo(savedFileName), memberDomain.getId());
         return ResponseEntity.ok(createdPostId);
     }
 
@@ -35,9 +45,16 @@ public class PostController {
         return ResponseEntity.ok(PostDetailsResponse.from(post));
     }
 
-    @PutMapping("/posts/{postId}")
-    public ResponseEntity<Void> updatePost(@PathVariable Long postId, @RequestBody UpdatePostRequest updatePostRequest) {
-        postService.updatePost(updatePostRequest.toUpdatedPost(postId));
+    @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updatePost(
+            @PathVariable Long postId,
+            @RequestPart("updatePostRequest") UpdatePostRequest updatePostRequest,
+            @RequestPart(value = "posterImage", required = false) MultipartFile posterImage) throws IOException {
+        String savedFileName = null;
+        if (posterImage != null && !posterImage.isEmpty()) {
+            savedFileName = fileService.saveFile(posterImage, "poster");
+        }
+        postService.updatePost(updatePostRequest.toUpdatedPost(postId, savedFileName));
         return ResponseEntity.ok().build();
     }
 

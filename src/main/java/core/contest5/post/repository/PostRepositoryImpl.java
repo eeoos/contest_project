@@ -1,5 +1,6 @@
 package core.contest5.post.repository;
 
+import core.contest5.awaiter.domain.Awaiter;
 import core.contest5.member.domain.Member;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.post.domain.Post;
@@ -62,25 +63,17 @@ public class PostRepositoryImpl implements PostRepository {
 
     @Override
     public void update(PostDomain domain) {
-        Post post = Post.builder()
-                .id(domain.getId())
-                .title(domain.getPostInfo().title())
-                .content(domain.getPostInfo().content())
-                .viewCount(domain.getViewCount())
-                .bookmarkCount(domain.getBookmarkCount())
-                .startDate(domain.getPostInfo().startDate())
-                .endDate(domain.getPostInfo().endDate())
-                .posterImage(domain.getPostInfo().posterImage())
-                .qualification(domain.getPostInfo().qualification())
-                .awardScale(domain.getPostInfo().awardScale())
-                .host(domain.getPostInfo().host())
-                .writer(Member.from(domain.getMember()))
-                .hostHomepageURL(domain.getPostInfo().hostHomepageURL())
-                .postFields(domain.getPostInfo().postFields())
-                .contestStatus(domain.getPostInfo().contestStatus())
-                .build();
 
-        postJpaRepository.save(post);
+        Post existingPost = postJpaRepository.findById(domain.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+        Post updatedPost = Post.from(domain);
+        if (existingPost.getAwaiters() != null) {
+            updatedPost.updateAwaiters(existingPost.getAwaiters());
+        }
+
+        postJpaRepository.save(updatedPost);
+
     }
     @Override
     public void delete(Long postId) {
@@ -140,22 +133,7 @@ public class PostRepositoryImpl implements PostRepository {
         return posts.stream().map(Post::toDomain).collect(Collectors.toList());
     }
 
-    /*@Override
-    public List<PostDomain> findAll() {
-        List<Post> posts = postJpaRepository.findAll(); //
 
-        return posts.stream()
-                .map(Post::toDomain) //
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<PostDomain> findByPostFieldsIn(Set<PostField> fields) {
-        List<Post> posts = postJpaRepository.findByPostFieldsIn(fields);
-        return posts.stream()
-                .map(Post::toDomain)
-                .collect(Collectors.toList());
-    }*/
 
     @Override
     public void incrementViewCount(Long postId) {
@@ -198,4 +176,20 @@ public class PostRepositoryImpl implements PostRepository {
                 .map(Post::toDomain)
                 .collect(Collectors.toList());
     }
+    /*@Override
+    public List<PostDomain> findAll() {
+        List<Post> posts = postJpaRepository.findAll(); //
+
+        return posts.stream()
+                .map(Post::toDomain) //
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostDomain> findByPostFieldsIn(Set<PostField> fields) {
+        List<Post> posts = postJpaRepository.findByPostFieldsIn(fields);
+        return posts.stream()
+                .map(Post::toDomain)
+                .collect(Collectors.toList());
+    }*/
 }

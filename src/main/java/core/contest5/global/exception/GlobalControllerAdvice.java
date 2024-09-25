@@ -60,4 +60,10 @@ public class GlobalControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ErrorCode.NO_RESULT, e.getMessage()));
     }
+
+    @ExceptionHandler(value = FileUploadException.class)
+    public ResponseEntity<?> handleFileUploadException(FileUploadException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage()));
+    }
 }

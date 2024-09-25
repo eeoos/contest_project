@@ -6,7 +6,6 @@ import java.util.Set;
 
 public record UpdateMemberRequest(
 //        String email,
-        String profileImage,
         String name,
         String memberField,
         String memberDuty,
@@ -15,7 +14,6 @@ public record UpdateMemberRequest(
         String major,
         Set<String> techStacks,
         Set<String> certificates,
-        Set<String> contestEntries,
         Set<String> awards
 ) {
     /*public UpdatedMemberInfo toUpdatedMember(Long memberId) {

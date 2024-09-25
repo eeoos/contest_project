@@ -11,11 +11,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class TeamWaiterResponseDto {
-    private Long id;
-    private Long postId;
     private Long teamId;
+    private Long postId;
     private String teamName;
-    private String teamLeaderName;
-    private LocalDateTime registrationDate;
+    private String description;
     private ApplicationStatus applicationStatus;
+
+    public static TeamWaiterResponseDto from(TeamWaiterDomain domain) {
+        return new TeamWaiterResponseDto(
+                domain.getTeam().getId(),
+                domain.getPost().getId(),
+                domain.getTeam().getName(),
+                domain.getTeam().getDescription(),
+                domain.getApplicationStatus()
+        );
+    }
 }
