@@ -19,11 +19,19 @@ public class FileService {
     @Value("${file.member.upload-dir}")
     private String thumbnailUploadDir;
 
+    @Value("${file.attachment.upload-dir}")
+    private String attachmentUploadDir;
+
+    @Value("${file.award.upload-dir}")
+    private String awardUploadDir;
+
     public List<String> saveFiles(List<MultipartFile> files, String type) throws IOException {
         List<String> savedFileNames = new ArrayList<>();
-        for (MultipartFile file : files) {
-            if (file != null && !file.isEmpty()) {
-                savedFileNames.add(saveFile(file, type));
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    savedFileNames.add(saveFile(file, type));
+                }
             }
         }
         return savedFileNames;
@@ -61,6 +69,10 @@ public class FileService {
                 return Paths.get(posterUploadDir);
             case "member":
                 return Paths.get(thumbnailUploadDir);
+            case "attachment":
+                return Paths.get(attachmentUploadDir);
+            case "award":
+                return Paths.get(awardUploadDir);
             default:
                 throw new IllegalArgumentException("Invalid file type: " + type);
         }

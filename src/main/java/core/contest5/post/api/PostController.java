@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -32,34 +30,64 @@ public class PostController {
     @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> createPost(
             @RequestPart CreatePostRequest postRequest,
-            @RequestPart MultipartFile posterImage,
+            @RequestPart MultipartFile posterImage, //필수O, 없으면 회사 로고라도
+            @RequestPart(required = false) List<MultipartFile> attachedFiles, //필수X
             @AuthenticationPrincipal MemberDomain memberDomain) throws IOException {
-        String savedFileName = fileService.saveFile(posterImage, "poster");
-        Long createdPostId = postService.writePost(postRequest.toPostInfo(savedFileName), memberDomain.getId());
+        String savedPosterImageFileName = fileService.saveFile(posterImage, "poster");
+        List<String> savedAttachedFileNames = new ArrayList<>();
+        if (attachedFiles != null && !attachedFiles.isEmpty()) {
+            savedAttachedFileNames = fileService.saveFiles(attachedFiles, "attachment");
+        }
+        Long createdPostId = postService.writePost(postRequest.toPostInfo(savedPosterImageFileName, savedAttachedFileNames), memberDomain.getId());
         return ResponseEntity.ok(createdPostId);
     }
 
+
+
     @GetMapping("/posts/{postId}")
-    public ResponseEntity<PostDetailsResponse> readPost(@PathVariable Long postId) {
+    public ResponseEntity<CommonPostDetailsResponse> readCommonPostDetails(@PathVariable Long postId) {
         PostDomain post = postService.readPost(postId);
-        return ResponseEntity.ok(PostDetailsResponse.from(post));
+        return ResponseEntity.ok(CommonPostDetailsResponse.from(post));
     }
 
-    @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /*@GetMapping("/posts/{postId}/details")
+    public ResponseEntity<PostDetailsContentResponse> readPostDetailsContent(@PathVariable Long postId) {
+    }*/
+
+    @GetMapping("/posts/fields")
+    public ResponseEntity<List<String>> getFields() {
+        List<String> fieldDescriptions = Arrays.stream(PostField.values())
+                .map(PostField::getDescription)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(fieldDescriptions);
+    }
+
+    @PutMapping(value = "/posts/{postId}", consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updatePost(
             @PathVariable Long postId,
             @RequestPart("updatePostRequest") UpdatePostRequest updatePostRequest,
-            @RequestPart(value = "posterImage", required = false) MultipartFile posterImage) throws IOException {
-        String savedFileName = null;
+            @RequestPart(value = "posterImage", required = false) MultipartFile posterImage,
+            @RequestPart(value = "attachedFiles", required = false) List<MultipartFile> attachedFiles
+    ) throws IOException {
+
+        PostDomain existingPost = postService.readPost(postId);
+
+        String savedPosterImageName = existingPost.getPostInfo().posterImage();
         if (posterImage != null && !posterImage.isEmpty()) {
-            savedFileName = fileService.saveFile(posterImage, "poster");
+            savedPosterImageName = fileService.saveFile(posterImage, "poster");
         }
-        postService.updatePost(updatePostRequest.toUpdatedPost(postId, savedFileName));
+
+        List<String> savedAttachedFileNames = new ArrayList<>(existingPost.getPostInfo().attachedFiles());
+        if (attachedFiles != null && !attachedFiles.isEmpty()) {
+            savedAttachedFileNames = fileService.saveFiles(attachedFiles, "attachment");
+        }
+
+        postService.updatePost(updatePostRequest.toUpdatedPost(postId, savedPosterImageName, savedAttachedFileNames));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/posts/{postId}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId) { // closed 상태는 삭제 불가
         postService.deletePost(postId);
         return ResponseEntity.noContent().build();
     }
@@ -69,7 +97,7 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getPosts(
             @RequestParam(required = false) Set<PostField> fields,
             @RequestParam(required = false, defaultValue = "LATEST") SortOption sortOption) {
-        List<PostDomain> posts = postService.getPosts(fields, sortOption);
+        List<PostDomain> posts = postService.getActivePosts(fields, sortOption);
         return ResponseEntity.ok(posts.stream()
                 .map(PostResponse::from)
                 .collect(Collectors.toList()));
@@ -120,5 +148,15 @@ public class PostController {
                 .map(PostResponse::from)
                 .collect(Collectors.toList()));
 
+    }*/
+    /*@PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Long> createPost(
+            @RequestPart CreatePostRequest postRequest,
+            @RequestPart MultipartFile posterImage,
+
+            @AuthenticationPrincipal MemberDomain memberDomain) throws IOException {
+        String savedFileName = fileService.saveFile(posterImage, "poster");
+        Long createdPostId = postService.writePost(postRequest.toPostInfo(savedFileName), memberDomain.getId());
+        return ResponseEntity.ok(createdPostId);
     }*/
 }

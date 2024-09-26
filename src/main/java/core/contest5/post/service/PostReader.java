@@ -17,6 +17,4 @@ public class PostReader {
         postRepository.incrementViewCount(postId);
         return domain;
     }
-
-
 }

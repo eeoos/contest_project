@@ -1,5 +1,6 @@
 package core.contest5.post.service;
 
+import core.contest5.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,7 @@ public class PostUpdator {
     public void update(Long postId, PostInfo updatedPostInfo) {
         PostDomain postDomain = postRepository.findById(postId);
         if (postDomain == null) {
-            throw new IllegalArgumentException("Post not found");
+            throw new ResourceNotFoundException("Post not found");
         }
 
         // PostDomain 객체 업데이트
@@ -30,11 +31,9 @@ public class PostUpdator {
                 postDomain.getBookmarkCount(),
                 postDomain.getMember(),
                 postDomain.getCreatedAt(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                postDomain.getAwaiterCount()
         );
-
         postRepository.update(updatedPostDomain);
-
     }
-
 }

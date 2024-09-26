@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 
@@ -23,13 +24,24 @@ public class UpdatePostRequest{
     private String host;
     private String hostHomepageURL;
     private Set<PostField> postFields;
-    private ContestStatus contestStatus;
     private Long userId;
 
 
 
-    public UpdatedPostInfo toUpdatedPost(Long postId, String posterImage) {
+    public UpdatedPostInfo toUpdatedPost(Long postId, String posterImage, List<String> attachedFiles) {
+
+        ContestStatus status;
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isBefore(startDate)) {
+            status = ContestStatus.NOT_STARTED; // 접수 전
+        } else if (now.isAfter(endDate)) {
+            status = ContestStatus.CLOSED; // 접수 끝남
+        } else {
+            status = ContestStatus.IN_PROGRESS; // 접수 중
+        }
         return new UpdatedPostInfo(
+
                 postId,
                 new PostInfo(
                         title,
@@ -37,12 +49,13 @@ public class UpdatePostRequest{
                         startDate,
                         endDate,
                         posterImage,
+                        attachedFiles,
                         qualification,
                         awardScale,
                         host,
                         hostHomepageURL,
                         postFields,
-                        contestStatus
+                        status
                 ),
                 userId
         );

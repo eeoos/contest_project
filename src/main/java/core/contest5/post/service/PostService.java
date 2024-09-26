@@ -4,6 +4,7 @@ import core.contest5.file.FileService;
 import core.contest5.global.exception.NoSearchResultsException;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberReader;
+import core.contest5.post.domain.ContestStatus;
 import core.contest5.post.domain.PostField;
 import core.contest5.post.domain.PostResponse;
 import core.contest5.post.domain.SortOption;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,9 +30,29 @@ public class PostService {
     private final PostRepository postRepository;
     private final PermissionValidator permissionValidator;
     private final FileService fileService;
+
     public Long writePost(PostInfo postInfo, Long userId) {
         MemberDomain member = memberReader.read(userId);
-        return postAppender.append(postInfo, member);
+
+        // ContestStatus를 결정
+        ContestStatus initialStatus = determineInitialStatus(postInfo.startDate(), postInfo.endDate());
+
+        PostInfo updatedPostInfo = new PostInfo(
+                postInfo.title(),
+                postInfo.content(),
+                postInfo.startDate(),
+                postInfo.endDate(),
+                postInfo.posterImage(),
+                postInfo.attachedFiles(),
+                postInfo.qualification(),
+                postInfo.awardScale(),
+                postInfo.host(),
+                postInfo.hostHomepageURL(),
+                postInfo.postFields(),
+                initialStatus
+        );
+
+        return postAppender.append(updatedPostInfo, member);
     }
 
     public PostDomain readPost(Long postId) {
@@ -50,37 +72,49 @@ public class PostService {
             fileService.deleteFile(existingPost.getPostInfo().posterImage(), "poster");
         }
 
+        // 첨부 파일 처리
+        List<String> existingAttachedFiles = existingPost.getPostInfo().attachedFiles();
+        List<String> updatedAttachedFiles = updatedInfo.postInfo().attachedFiles();
+
+        if (updatedAttachedFiles != null && !updatedAttachedFiles.equals(existingAttachedFiles)) {
+            // 기존 파일 삭제
+            if (existingAttachedFiles != null) {
+                fileService.deleteFiles(existingAttachedFiles, "attachment");
+            }
+        }
+
         postUpdator.update(existingPost.getId(), updatedInfo.postInfo());
     }
 
     public void deletePost(Long postId) {
         postRepository.delete(postId);
     }
-    public List<PostDomain> getPosts(Set<PostField> fields, SortOption sortOption) {
+
+    public List<PostDomain> getActivePosts(Set<PostField> fields, SortOption sortOption) {
         if (fields != null && !fields.isEmpty()) {
-            return postRepository.findByPostFieldsIn(fields, sortOption);
+            return postRepository.findByPostFieldsInAndContestStatusNotSorted(fields, ContestStatus.CLOSED, sortOption);
         } else {
-            return postRepository.findAllSorted(sortOption);
+            return postRepository.findAllExceptStatusSorted(ContestStatus.CLOSED, sortOption);
         }
     }
 
+
     public List<PostDomain> searchPosts(String keyword) {
         List<PostDomain> searchResults = postRepository.searchPosts(keyword);
+        // 여기서 반환되는 결과는 이미 CLOSED 상태의 게시글이 제외된 상태
         if (searchResults.isEmpty()) {
             throw new NoSearchResultsException("검색 결과가 없습니다.");
         }
         return searchResults;
     }
-
-    /*public List<PostDomain> getPosts() {
-        return postRepository.findAll();
-
+    private ContestStatus determineInitialStatus(LocalDateTime startDate, LocalDateTime endDate) {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(startDate)) {
+            return ContestStatus.NOT_STARTED;
+        } else if (now.isAfter(endDate)) {
+            return ContestStatus.CLOSED;
+        } else {
+            return ContestStatus.IN_PROGRESS;
+        }
     }
-
-    public List<PostDomain> getPostsByFields(Set<PostField> fields) {
-        return postRepository.findByPostFieldsIn(fields);
-//        return postDomainListByFields.stream()
-//                .map(PostResponse::from)
-//                .collect(Collectors.toList());
-    }*/
 }

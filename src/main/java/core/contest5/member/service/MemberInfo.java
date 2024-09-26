@@ -3,6 +3,7 @@ package core.contest5.member.service;
 import core.contest5.member.domain.memberinfo.*;
 import jakarta.validation.constraints.Email;
 
+import java.util.List;
 import java.util.Set;
 
 public record MemberInfo(
@@ -22,8 +23,8 @@ public record MemberInfo(
 
         Set<TechStack> techStacks,
         Set<Certificate> certificates,
-        Set<ContestEntry> contestEntries,
-        Set<Award> awards
+        Set<String> awards,
+        Set<ContestEntry> contestEntries
 
 ) {
 }

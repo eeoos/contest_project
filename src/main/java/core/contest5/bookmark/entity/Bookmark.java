@@ -27,5 +27,4 @@ public class Bookmark {
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
-
 }

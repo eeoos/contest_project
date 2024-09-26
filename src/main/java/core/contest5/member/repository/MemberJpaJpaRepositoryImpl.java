@@ -66,8 +66,8 @@ public class MemberJpaJpaRepositoryImpl implements MemberRepository {
                 .memberRole(existingMember.getMemberRole())
                 .techStacks(domain.getMemberInfo().techStacks())
                 .certificates(domain.getMemberInfo().certificates())
+                .awardFileNames(domain.getMemberInfo().awards())
                 .contestEntries(domain.getMemberInfo().contestEntries())
-                .awards(domain.getMemberInfo().awards())
                 .createdAt(existingMember.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();

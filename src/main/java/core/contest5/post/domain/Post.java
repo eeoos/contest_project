@@ -49,6 +49,11 @@ public class Post {
     @Column(name = "poster_image")
     private String posterImage;
 
+    @ElementCollection
+    @CollectionTable(name = "post_attached_files", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "file_name")
+    private List<String> attachedFiles;
+
     @Column(name = "qualification")
     //응모 자격
     private String qualification;
@@ -73,6 +78,10 @@ public class Post {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Set<PostField> postFields = new HashSet<>();
+
+    @Builder.Default
+    @Column(name = "awaiter_count")
+    private Long awaiterCount = 0L;
 
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -110,6 +119,7 @@ public class Post {
                 .startDate(post.getPostInfo().startDate())
                 .endDate(post.getPostInfo().endDate())
                 .posterImage(post.getPostInfo().posterImage())
+                .attachedFiles(post.getPostInfo().attachedFiles())
                 .qualification(post.getPostInfo().qualification())
                 .awardScale(post.getPostInfo().awardScale())
                 .host(post.getPostInfo().host())
@@ -139,19 +149,23 @@ public class Post {
                         startDate,
                         endDate,
                         posterImage,
+                        attachedFiles,
                         qualification,
                         awardScale,
                         host,
                         hostHomepageURL,
                         postFields,
                         contestStatus
+
                 ),
                 viewCount,
                 bookmarkCount,
 //                awaiters,
                 writer.toDomain(),
                 startDate,
-                endDate
+                endDate,
+                awaiterCount
+
         );
     }
 
@@ -162,11 +176,12 @@ public class Post {
         this.startDate = postInfo.startDate();
         this.endDate = postInfo.endDate();
         this.posterImage = postInfo.posterImage();
+        this.attachedFiles = postInfo.attachedFiles();
         this.qualification = postInfo.qualification();
         this.awardScale = postInfo.awardScale();
         this.host = postInfo.host();
         this.hostHomepageURL = postInfo.hostHomepageURL();
-        this.contestStatus = postInfo.contestStatus();
+//        this.contestStatus = postInfo.contestStatus();
         updatePostFields(postInfo.postFields());
     }
 
@@ -194,5 +209,16 @@ public class Post {
     public void removeAwaiter(Awaiter awaiter) {
         this.awaiters.remove(awaiter);
         awaiter.changePost(null);
+    }
+
+    public void updateStatus() {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(startDate)) {
+            this.contestStatus = ContestStatus.NOT_STARTED;
+        } else if (now.isAfter(endDate)) {
+            this.contestStatus = ContestStatus.CLOSED;
+        } else {
+            this.contestStatus = ContestStatus.IN_PROGRESS;
+        }
     }
 }

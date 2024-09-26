@@ -5,6 +5,7 @@ import core.contest5.post.domain.PostField;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public record PostInfo(
@@ -13,6 +14,7 @@ public record PostInfo(
         LocalDateTime startDate,
         LocalDateTime endDate,
         String posterImage,
+        List<String> attachedFiles,
         String qualification,
         String awardScale,
         String host,

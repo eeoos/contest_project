@@ -103,11 +103,13 @@ public class Member implements UserDetails {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Certificate> certificates;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ContestEntry> contestEntries;
+    @ElementCollection
+    @CollectionTable(name = "member_awards", joinColumns = @JoinColumn(name = "member_id"))
+    @Column(name = "award_file_name")
+    private Set<String> awardFileNames;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Award> awards;
+    private Set<ContestEntry> contestEntries;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -151,8 +153,8 @@ public class Member implements UserDetails {
                         major,
                         techStacks,
                         certificates,
-                        contestEntries,
-                        awards
+                        awardFileNames,
+                        contestEntries
                 ),
 
                 createdAt,
@@ -175,7 +177,7 @@ public class Member implements UserDetails {
                 .techStacks(domain.getMemberInfo().techStacks())
                 .certificates(domain.getMemberInfo().certificates())
                 .contestEntries(domain.getMemberInfo().contestEntries())
-                .awards(domain.getMemberInfo().awards())
+                .awardFileNames(domain.getMemberInfo().awards())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();

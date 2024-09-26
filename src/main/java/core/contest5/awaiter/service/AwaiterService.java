@@ -1,13 +1,10 @@
 package core.contest5.awaiter.service;
 
 import core.contest5.global.exception.UnauthorizedException;
-import core.contest5.member.domain.memberinfo.Certificate;
-import core.contest5.member.domain.memberinfo.TechStack;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberReader;
 import core.contest5.awaiter.domain.*;
 import core.contest5.post.service.PostDomain;
-import core.contest5.post.service.PostReader;
 import core.contest5.post.service.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +17,7 @@ import java.util.List;
 public class AwaiterService {
 
     private final AwaiterRepository awaiterRepository;
-    private final PostReader postReader;
+    private final PostRepository postRepository;
     private final MemberReader memberReader;
 
 
@@ -40,7 +37,7 @@ public class AwaiterService {
 
     @Transactional
     public void applyAsAwaiter(Long postId, AwaiterRequest request) {
-        PostDomain postDomain = postReader.read(postId);
+        PostDomain postDomain = postRepository.findById(postId);
         MemberDomain memberDomain = memberReader.read(request.getMemberId());
 
         AwaiterDomain newAwaiterDomain = AwaiterDomain.builder()
@@ -51,11 +48,12 @@ public class AwaiterService {
                 .build();
 
         awaiterRepository.save(newAwaiterDomain);
+        postRepository.incrementAwaiterCount(postId);
     }
 
     @Transactional
     public AwaiterDomain updateAwaiterStatus(Long postId, Long memberId, AwaiterStatusUpdateDto statusUpdateDto) {
-        PostDomain postDomain = postReader.read(postId);
+        PostDomain postDomain = postRepository.findById(postId);
         MemberDomain memberDomain = memberReader.read(memberId);
 
         AwaiterId id = new AwaiterId(memberDomain.getId(), postDomain.getId());
@@ -70,7 +68,7 @@ public class AwaiterService {
     @Transactional
     public void deleteAwaiter(Long postId, Long memberId, Long requesterId) {
 
-        PostDomain postDomain = postReader.read(postId);
+        PostDomain postDomain = postRepository.findById(postId);
         MemberDomain memberDomain = memberReader.read(memberId);
 
         AwaiterId id = new AwaiterId(memberDomain.getId(), postDomain.getId());
@@ -83,6 +81,6 @@ public class AwaiterService {
         }
 
         awaiterRepository.delete(awaiterDomain);
-
+        postRepository.decrementAwaiterCount(postId);
     }
 }

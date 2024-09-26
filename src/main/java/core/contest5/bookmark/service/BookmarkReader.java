@@ -14,6 +14,7 @@ public class BookmarkReader {
     }
 
     public long count(BookmarkDomain bookmarkDomain) {
+
         return bookmarkRepository.count(bookmarkDomain);
     }
 

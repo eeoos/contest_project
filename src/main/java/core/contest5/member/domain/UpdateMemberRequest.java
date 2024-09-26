@@ -14,7 +14,7 @@ public record UpdateMemberRequest(
         String major,
         Set<String> techStacks,
         Set<String> certificates,
-        Set<String> awards
+        Set<String> contestEntries
 ) {
     /*public UpdatedMemberInfo toUpdatedMember(Long memberId) {
         return new UpdatedMemberInfo(

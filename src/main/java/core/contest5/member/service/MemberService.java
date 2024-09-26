@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,7 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateMember(Long memberId, UpdateMemberRequest updateMemberRequest, String thumbnailImage, List<String> contestEntryNames) {
+    public void updateMember(Long memberId, UpdateMemberRequest updateMemberRequest, String thumbnailImage, List<String> awardNames) {
         MemberField memberField = memberFieldService.findOrCreateMemberField(updateMemberRequest.memberField());
         MemberDuty memberDuty = memberDutyService.findOrCreateMemberDuty(updateMemberRequest.memberDuty());
         MemberDomain existingMember = memberReader.read(memberId);
@@ -73,17 +74,17 @@ public class MemberService implements UserDetailsService {
                 memberId
         );
 
-        Set<ContestEntry> updatedContestEntries = updateOrCreateContestEntries(
-                existingMember.getMemberInfo().contestEntries(),
-                contestEntryNames,
+        /*Set<Award> updatedAwards = updateOrCreateAwards(
+                existingMember.getMemberInfo().awards(),
+                awardNames,
                 memberId
         );
-
-        Set<Award> updatedAwards = updateOrCreateSet(
-                existingMember.getMemberInfo().awards(),
-                updateMemberRequest.awards(),
-                Award::getName,
-                (awardName, member) -> new Award(awardName, member),
+*/
+        Set<ContestEntry> updatedContestEntries = updateOrCreateSet(
+                existingMember.getMemberInfo().contestEntries(),
+                updateMemberRequest.contestEntries(),
+                ContestEntry::getName,
+                (contestEntryName, member) -> new ContestEntry(contestEntryName, member),
                 memberId
         );
 
@@ -101,8 +102,8 @@ public class MemberService implements UserDetailsService {
                         updateMemberRequest.major(),
                         updatedTechStacks,
                         updatedCertificates,
-                        updatedContestEntries,
-                        updatedAwards
+                        new HashSet<>(awardNames),
+                        updatedContestEntries
                 )
         );
         memberUpdator.update(existingMember, updatedInfo);
@@ -133,12 +134,12 @@ public class MemberService implements UserDetailsService {
         return resultSet;
     }
 
-    private Set<ContestEntry> updateOrCreateContestEntries(
-            Set<ContestEntry> existingEntries,
+    /*private Set<Award> updateOrCreateAwards(
+            Set<Award> existingAwards,
             List<String> newFileNames,
             Long memberId
     ) {
-        Set<ContestEntry> resultSet = new HashSet<>(existingEntries);
+        Set<Award> resultSet = new HashSet<>(existingAwards);
         Member member = Member.from(memberId);
 
         // Remove entries that are no longer in the new set
@@ -149,12 +150,12 @@ public class MemberService implements UserDetailsService {
             boolean exists = resultSet.stream()
                     .anyMatch(entry -> entry.getName().equals(fileName));
             if (!exists) {
-                resultSet.add(new ContestEntry(fileName, member));
+                resultSet.add(new Award(fileName, member));
             }
         }
 
         return resultSet;
-    }
+    }*/
     public MemberDomain readMember(Long memberId) {
         MemberDomain member = memberReader.read(memberId);
         if (member.getMemberInfo().memberField() == null // 첫 로그인
@@ -176,8 +177,8 @@ public class MemberService implements UserDetailsService {
                             member.getMemberInfo().major(),
                             member.getMemberInfo().techStacks(),
                             member.getMemberInfo().certificates(),
-                            member.getMemberInfo().contestEntries(),
-                            member.getMemberInfo().awards()
+                            member.getMemberInfo().awards(),
+                            member.getMemberInfo().contestEntries()
                     ),
                     member.getCreatedAt(),
                     member.getUpdatedAt()

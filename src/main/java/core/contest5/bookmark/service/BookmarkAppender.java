@@ -15,6 +15,7 @@ public class BookmarkAppender {
 
     @Transactional
     public void append(BookmarkDomain bookmarkDomain) {
+
         bookmarkRepository.save(bookmarkDomain);
         PostDomain postDomain = postRepository.findById(bookmarkDomain.postId());
         postDomain.increaseBookmarkCount();

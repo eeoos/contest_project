@@ -1,5 +1,6 @@
 package core.contest5.member.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import core.contest5.member.domain.memberinfo.*;
 import core.contest5.member.service.MemberDomain;
 import lombok.Builder;
@@ -25,8 +26,10 @@ public record MemberResponse(
         Set<String> techStackNames,
         Set<String> certificateNames,
         Set<String> contestEntryNames,
-        Set<String> awardNames,
+        Set<String> awards,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
         LocalDateTime createdAt,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
         LocalDateTime updatedAt
 
 
@@ -36,7 +39,8 @@ public record MemberResponse(
                 domain.getId(),
                 domain.getMemberInfo().email(),
                 domain.getMemberInfo().name(),
-                domain.getMemberInfo().profileImage(),
+//                domain.getMemberInfo().profileImage(), // null일 가능성 있음
+                domain.getMemberInfo().profileImage() != null ? domain.getMemberInfo().profileImage() : null,
                 domain.getMemberInfo().memberRole(),
                 Optional.ofNullable(domain.getMemberInfo().memberField()).map(MemberField::getFieldName).orElse(null),
                 Optional.ofNullable(domain.getMemberInfo().memberDuty()).map(MemberDuty::getDutyName).orElse(null),
@@ -54,9 +58,10 @@ public record MemberResponse(
                 Optional.ofNullable(domain.getMemberInfo().contestEntries()).map(contestEntries ->
                         contestEntries.stream().map(ContestEntry::getName).collect(Collectors.toSet())
                 ).orElse(Collections.emptySet()),
-                Optional.ofNullable(domain.getMemberInfo().awards()).map(awards ->
-                        awards.stream().map(Award::getName).collect(Collectors.toSet())
-                ).orElse(Collections.emptySet()),
+                Optional.ofNullable(domain.getMemberInfo().awards()).orElse(Collections.emptySet()),
+//                Optional.ofNullable(domain.getMemberInfo().awards()).map(awards ->
+//                        awards.stream().map(Award::getName).collect(Collectors.toSet())
+//                ).orElse(Collections.emptySet()),
                 /*domain.getMemberInfo().techStacks().stream().map(TechStack::getName).collect(Collectors.toSet()),
                 domain.getMemberInfo().certificates().stream().map(Certificate::getName).collect(Collectors.toSet()),
                 domain.getMemberInfo().contestEntries().stream().map(ContestEntry::getName).collect(Collectors.toSet()),
