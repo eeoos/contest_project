@@ -3,6 +3,7 @@ package core.contest5.post.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import core.contest5.post.service.PostInfo;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.Set;
 @Getter
 public class CreatePostRequest{
     private String title;
-    private String content;
+    private String contentText;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDateTime startDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
@@ -24,11 +25,15 @@ public class CreatePostRequest{
     private String qualification;
     private String awardScale;
     private String host;
+    private ApplicationMethod applicationMethod;
+
+    @Email
+    private String applicationEmail;
     private String hostHomepageURL;
     private Set<PostField> postFields;
 
 
-    public PostInfo toPostInfo(String posterImage, List<String> attachedFiles) {
+    public PostInfo toPostInfo(String posterImage, List<String> attachedFiles, PostContent content) {
 
         ContestStatus status;
         LocalDateTime now = LocalDateTime.now();
@@ -51,6 +56,8 @@ public class CreatePostRequest{
                 qualification,
                 awardScale,
                 host,
+                applicationMethod,
+                applicationEmail,
                 hostHomepageURL,
                 postFields,
                 status

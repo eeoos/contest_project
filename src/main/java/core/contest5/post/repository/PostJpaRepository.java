@@ -30,13 +30,14 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount - 1 WHERE p.id = :postId AND p.bookmarkCount > 0") //0일 때 방지 작업: O
     void decrementBookmarkCount(Long postId);
 
-    @Modifying
+    /*@Modifying
     @Query("UPDATE Post p SET p.awaiterCount = p.awaiterCount + 1 WHERE p.id = :postId")
     void incrementAwaiterCount(Long postId);
 
     @Modifying
     @Query("UPDATE Post p SET p.awaiterCount = p.awaiterCount - 1 WHERE p.id = :postId AND p.awaiterCount > 0") //0일 때 방지 작업: O
-    void decrementAwaiterCount(Long postId);
+    void decrementAwaiterCount(Long postId);*/
+
 
     @Query("SELECT p FROM Post p WHERE p.contestStatus <> :status ORDER BY p.createdAt DESC")
     List<Post> findAllExceptStatusOrderByCreatedAtDesc(@Param("status") ContestStatus status);
@@ -44,7 +45,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.contestStatus <> :status ORDER BY p.bookmarkCount DESC")
     List<Post> findAllExceptStatusOrderByBookmarkCountDesc(@Param("status") ContestStatus status);
 
-    @Query("SELECT p FROM Post p WHERE p.contestStatus <> :status ORDER BY p.awaiterCount DESC")
+    @Query("SELECT p FROM Post p WHERE p.contestStatus <> :status ORDER BY SIZE(p.awaiters) DESC")
     List<Post> findAllExceptStatusOrderByAwaiterCountDesc(@Param("status") ContestStatus status);
 
     @Query("SELECT p FROM Post p WHERE p.contestStatus <> :status ORDER BY p.endDate ASC")
@@ -56,7 +57,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p JOIN p.postFields f WHERE f IN :fields AND p.contestStatus <> :status ORDER BY p.bookmarkCount DESC")
     List<Post> findByPostFieldsInAndContestStatusNotOrderByBookmarkCountDesc(@Param("fields") Set<PostField> fields, @Param("status") ContestStatus status);
 
-    @Query("SELECT p FROM Post p JOIN p.postFields f WHERE f IN :fields AND p.contestStatus <> :status ORDER BY p.awaiterCount DESC")
+    @Query("SELECT p FROM Post p JOIN p.postFields f WHERE f IN :fields AND p.contestStatus <> :status ORDER BY SIZE(p.awaiters) DESC")
     List<Post> findByPostFieldsInAndContestStatusNotOrderByAwaiterCountDesc(@Param("fields") Set<PostField> fields, @Param("status") ContestStatus status);
 
     @Query("SELECT p FROM Post p JOIN p.postFields f WHERE f IN :fields AND p.contestStatus <> :status ORDER BY p.endDate ASC")

@@ -134,28 +134,6 @@ public class MemberService implements UserDetailsService {
         return resultSet;
     }
 
-    /*private Set<Award> updateOrCreateAwards(
-            Set<Award> existingAwards,
-            List<String> newFileNames,
-            Long memberId
-    ) {
-        Set<Award> resultSet = new HashSet<>(existingAwards);
-        Member member = Member.from(memberId);
-
-        // Remove entries that are no longer in the new set
-        resultSet.removeIf(entry -> !newFileNames.contains(entry.getName()));
-
-        // Add new entries
-        for (String fileName : newFileNames) {
-            boolean exists = resultSet.stream()
-                    .anyMatch(entry -> entry.getName().equals(fileName));
-            if (!exists) {
-                resultSet.add(new Award(fileName, member));
-            }
-        }
-
-        return resultSet;
-    }*/
     public MemberDomain readMember(Long memberId) {
         MemberDomain member = memberReader.read(memberId);
         if (member.getMemberInfo().memberField() == null // 첫 로그인
@@ -181,7 +159,10 @@ public class MemberService implements UserDetailsService {
                             member.getMemberInfo().contestEntries()
                     ),
                     member.getCreatedAt(),
-                    member.getUpdatedAt()
+                    member.getUpdatedAt(),
+                    member.getWarningCount(),
+                    member.getStatus(),
+                    member.getSuspensionEndTime()
             );
         }
         return member;
@@ -189,6 +170,10 @@ public class MemberService implements UserDetailsService {
 
     public MemberDomain getMemberById(Long userId) {
         return memberRepository.findById(userId);
+    }
+
+    public Long getTodaySignUpCount() {
+        return memberRepository.countMembersJoinedToday();
     }
         /*public Member signUp(SignUpForm form) {
         if(memberRepository.existsByEmail(form.getEmail())){

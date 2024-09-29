@@ -10,4 +10,5 @@ public interface MemberRepository {
     MemberDomain findById(Long memberId);
 
     void update(MemberDomain domain);
+    Long countMembersJoinedToday();
 }

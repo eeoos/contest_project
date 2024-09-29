@@ -30,7 +30,13 @@ public class Post {
 
     private String title;
 
-    private String content;
+    @Embedded
+    private PostContent content;
+
+    /*@ElementCollection
+    @CollectionTable(name = "post_attachments", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "file_name")
+    private List<String> attachments;*/
 
     @Builder.Default
     @Column(name = "view_count")
@@ -66,6 +72,13 @@ public class Post {
     @Column(name = "host")
     private String host;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "application_method")
+    private ApplicationMethod applicationMethod;
+
+    @Column(name = "application_email")
+    private String applicationEmail;
+
     @ManyToOne
     @JoinColumn(name = "writer_id")
     private Member writer;
@@ -79,9 +92,9 @@ public class Post {
     @Builder.Default
     private Set<PostField> postFields = new HashSet<>();
 
-    @Builder.Default
+    /*@Builder.Default
     @Column(name = "awaiter_count")
-    private Long awaiterCount = 0L;
+    private Long awaiterCount = 0L;*/
 
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -129,6 +142,7 @@ public class Post {
                 .contestStatus(post.getPostInfo().contestStatus()) //추가
                 .postFields(post.getPostInfo().postFields())
                 .writer(Member.from(post.getMember()))
+                .applicationMethod(post.getPostInfo().applicationMethod())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
@@ -153,18 +167,19 @@ public class Post {
                         qualification,
                         awardScale,
                         host,
+                        applicationMethod,
+                        applicationEmail,
                         hostHomepageURL,
                         postFields,
                         contestStatus
-
                 ),
                 viewCount,
                 bookmarkCount,
-//                awaiters,
+                awaiters,
                 writer.toDomain(),
                 startDate,
-                endDate,
-                awaiterCount
+                endDate
+//                Long.valueOf(awaiters.size())
 
         );
     }
@@ -220,5 +235,9 @@ public class Post {
         } else {
             this.contestStatus = ContestStatus.IN_PROGRESS;
         }
+    }
+
+    public void updateContent(PostContent newContent) {
+        this.content = newContent;
     }
 }

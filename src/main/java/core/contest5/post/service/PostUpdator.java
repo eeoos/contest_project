@@ -29,10 +29,11 @@ public class PostUpdator {
                 updatedPostInfo,
                 postDomain.getViewCount(),
                 postDomain.getBookmarkCount(),
+                postDomain.getAwaiters(),
                 postDomain.getMember(),
                 postDomain.getCreatedAt(),
-                LocalDateTime.now(),
-                postDomain.getAwaiterCount()
+                LocalDateTime.now()
+//                postDomain.getAwaiterCount()
         );
         postRepository.update(updatedPostDomain);
     }

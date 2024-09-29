@@ -1,6 +1,7 @@
 package core.contest5.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import core.contest5.admin.domain.SuspensionStatus;
 import core.contest5.member.domain.memberinfo.*;
 import core.contest5.member.service.MemberDomain;
 import lombok.Builder;
@@ -27,6 +28,11 @@ public record MemberResponse(
         Set<String> certificateNames,
         Set<String> contestEntryNames,
         Set<String> awards,
+        int warningCount,
+        SuspensionStatus suspensionStatus,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
+        LocalDateTime suspensionEndTime,
+
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
         LocalDateTime createdAt,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
@@ -39,7 +45,6 @@ public record MemberResponse(
                 domain.getId(),
                 domain.getMemberInfo().email(),
                 domain.getMemberInfo().name(),
-//                domain.getMemberInfo().profileImage(), // null일 가능성 있음
                 domain.getMemberInfo().profileImage() != null ? domain.getMemberInfo().profileImage() : null,
                 domain.getMemberInfo().memberRole(),
                 Optional.ofNullable(domain.getMemberInfo().memberField()).map(MemberField::getFieldName).orElse(null),
@@ -66,6 +71,9 @@ public record MemberResponse(
                 domain.getMemberInfo().certificates().stream().map(Certificate::getName).collect(Collectors.toSet()),
                 domain.getMemberInfo().contestEntries().stream().map(ContestEntry::getName).collect(Collectors.toSet()),
                 domain.getMemberInfo().awards().stream().map(Award::getName).collect(Collectors.toSet()),*/
+                domain.getWarningCount(),
+                domain.getStatus(),
+                domain.getSuspensionEndTime(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt()
         );

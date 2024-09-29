@@ -48,7 +48,10 @@ public class AwaiterService {
                 .build();
 
         awaiterRepository.save(newAwaiterDomain);
-        postRepository.incrementAwaiterCount(postId);
+
+        postDomain.getAwaiters().add(Awaiter.from(newAwaiterDomain));
+        postRepository.save(postDomain);
+
     }
 
     @Transactional
@@ -81,6 +84,9 @@ public class AwaiterService {
         }
 
         awaiterRepository.delete(awaiterDomain);
-        postRepository.decrementAwaiterCount(postId);
+        postDomain.getAwaiters().removeIf(awaiter ->
+                awaiter.getId().equals(awaiterDomain.getId()));
+
+        postRepository.save(postDomain);
     }
 }

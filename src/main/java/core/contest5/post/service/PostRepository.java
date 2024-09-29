@@ -17,8 +17,8 @@ public interface PostRepository {
     void incrementBookmarkCount(Long postId);
 
     void decrementBookmarkCount(Long postId);
-    void incrementAwaiterCount(Long postId);
-    void decrementAwaiterCount(Long postId);
+//    void incrementAwaiterCount(Long postId);
+//    void decrementAwaiterCount(Long postId);
     PostDomain findById(Long postId);
 
     void update(PostDomain domain);

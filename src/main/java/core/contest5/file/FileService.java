@@ -25,6 +25,9 @@ public class FileService {
     @Value("${file.award.upload-dir}")
     private String awardUploadDir;
 
+    @Value("${file.content.upload-dir}")
+    private String contentUploadDir;
+
     public List<String> saveFiles(List<MultipartFile> files, String type) throws IOException {
         List<String> savedFileNames = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
@@ -73,6 +76,8 @@ public class FileService {
                 return Paths.get(attachmentUploadDir);
             case "award":
                 return Paths.get(awardUploadDir);
+            case "content":
+                return Paths.get(contentUploadDir);
             default:
                 throw new IllegalArgumentException("Invalid file type: " + type);
         }

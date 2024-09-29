@@ -27,6 +27,7 @@ public class BookmarkController {
         return ResponseEntity.ok(isBookmarked);
     }
 
+
     @GetMapping("/bookmarks/count")
     public ResponseEntity<Long> count(BookmarkRequest request) {
         return ResponseEntity.ok(bookmarkService.count(request.toBookmarkDomain()));

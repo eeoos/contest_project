@@ -7,7 +7,9 @@ import core.contest5.team.domain.TeamMemberDomain;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record PostResponse(
         Long postId,
@@ -21,7 +23,7 @@ public record PostResponse(
 
         String posterImage,
 
-        Set<PostField> postFields,
+        List<String> postFields,
         Long awaiterCount,
 
         MemberResponse user
@@ -40,7 +42,7 @@ public record PostResponse(
                 dDay,
                 domain.getPostInfo().endDate(),
                 domain.getPostInfo().posterImage(),
-                domain.getPostInfo().postFields(),
+                domain.getPostInfo().postFields().stream().map(PostField::getDescription).collect(Collectors.toList()),
                 domain.getAwaiterCount(),
                 MemberResponse.from(domain.getMember())
         );

@@ -10,12 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record CommonPostDetailsResponse(
         Long postId,
         String title,
-
-        String content,
 
         Long viewCount,
 
@@ -29,7 +28,7 @@ public record CommonPostDetailsResponse(
         LocalDateTime endDate,
 
         String posterImage,
-        List<String> attachedFile,
+//        List<String> attachedFile,
 
         String qualification,
 
@@ -37,9 +36,12 @@ public record CommonPostDetailsResponse(
 
         String host,
 
+        String applicationMethod,
+        String applicationEmail,
+
         String hostHomepageURL,
 
-        Set<PostField> postFields,
+        List<String> postFields,
         ContestStatus contestStatus,
 
         MemberResponse user
@@ -56,18 +58,19 @@ public record CommonPostDetailsResponse(
         return new CommonPostDetailsResponse(
                 domain.getId(),
                 domain.getPostInfo().title(),
-                domain.getPostInfo().content(),
                 domain.getViewCount(),
                 domain.getBookmarkCount(),
                 dDay,
                 domain.getPostInfo().endDate(),
                 domain.getPostInfo().posterImage(),
-                Optional.ofNullable(domain.getPostInfo().attachedFiles()).orElse(Collections.emptyList()),
+//                Optional.ofNullable(domain.getPostInfo().attachedFiles()).orElse(Collections.emptyList()),
                 domain.getPostInfo().qualification(),
                 domain.getPostInfo().awardScale(),
                 domain.getPostInfo().host(),
+                domain.getPostInfo().applicationMethod().getDescription(),
+                domain.getPostInfo().applicationEmail(),
                 domain.getPostInfo().hostHomepageURL(),
-                domain.getPostInfo().postFields(),
+                domain.getPostInfo().postFields().stream().map(PostField::getDescription).collect(Collectors.toList()),
                 domain.getPostInfo().contestStatus(),
                 MemberResponse.from(domain.getMember())
         );

@@ -34,7 +34,7 @@ public class PostService {
     public Long writePost(PostInfo postInfo, Long userId) {
         MemberDomain member = memberReader.read(userId);
 
-        // ContestStatus를 결정
+        // ContestStatus 결정
         ContestStatus initialStatus = determineInitialStatus(postInfo.startDate(), postInfo.endDate());
 
         PostInfo updatedPostInfo = new PostInfo(
@@ -47,6 +47,8 @@ public class PostService {
                 postInfo.qualification(),
                 postInfo.awardScale(),
                 postInfo.host(),
+                postInfo.applicationMethod(),
+                postInfo.applicationEmail(),
                 postInfo.hostHomepageURL(),
                 postInfo.postFields(),
                 initialStatus
@@ -59,6 +61,20 @@ public class PostService {
         return postReader.read(postId);
     }
 
+    public String readPostApplicationMethod(Long postId) {
+        PostDomain postDomain = postReader.read(postId);
+        switch (postDomain.getPostInfo().applicationMethod()) {
+            case EMAIL : return postDomain.getPostInfo().applicationEmail();
+            case HOMEPAGE : return postDomain.getPostInfo().hostHomepageURL();
+//            case QR: return postDomain.getPostInfo().applicationMethod().getDescription();
+            default : return postDomain.getPostInfo().hostHomepageURL();
+        }
+    }
+
+    /*public List<reviewDomain> readPostReviews(Long postId) { // 팁/후기 - 커뮤니티와 결합 후 구현
+        List<reviewDomain> reviews = reviewRepository.findByPostId(postId);
+        return reviews;
+    }*/
 
     @Transactional
     public void updatePost(UpdatedPostInfo updatedInfo) throws IOException {

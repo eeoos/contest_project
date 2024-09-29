@@ -3,6 +3,7 @@ package core.contest5.awaiter.domain;
 import core.contest5.member.domain.Member;
 import core.contest5.member.domain.memberinfo.Certificate;
 import core.contest5.member.domain.memberinfo.TechStack;
+import core.contest5.member.service.MemberDomain;
 import core.contest5.team.domain.TeamMemberDomain;
 import lombok.*;
 
@@ -26,8 +27,6 @@ public class AwaiterResponseDto {
     private ApplicationStatus applicationStatus;
 
     public static AwaiterResponseDto from(AwaiterDomain domain) {
-
-
         return new AwaiterResponseDto(
                 domain.getId().getPostId(),
                 domain.getId().getMemberId(),

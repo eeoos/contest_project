@@ -48,6 +48,8 @@ public class PostRepositoryImpl implements PostRepository {
                 .hostHomepageURL(info.hostHomepageURL())
                 .postFields(info.postFields())
                 .contestStatus(info.contestStatus())
+                .applicationMethod(info.applicationMethod())
+                .applicationEmail(info.applicationEmail())
                 .build();
 
         return postJpaRepository.save(post).getId();
@@ -109,7 +111,7 @@ public class PostRepositoryImpl implements PostRepository {
         postJpaRepository.decrementBookmarkCount(postId);
     }
 
-    @Override
+    /*@Override
     public void incrementAwaiterCount(Long postId) {
         postJpaRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
@@ -124,7 +126,7 @@ public class PostRepositoryImpl implements PostRepository {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
         postJpaRepository.decrementAwaiterCount(postId);
 //        postJpaRepository.save(post);
-    }
+    }*/
 
     @Override
     public List<PostDomain> searchPosts(String keyword) {

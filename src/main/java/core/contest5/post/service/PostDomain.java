@@ -18,15 +18,16 @@ public class PostDomain {
     private PostInfo postInfo;
     private Long viewCount;
     private Long bookmarkCount;
-//    private List<Awaiter> awaiterList;
+    private List<Awaiter> awaiters;
     private MemberDomain member;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long awaiterCount;
+//    private Long awaiterCount;
 //    private ContestStatus contestStatus;
 
-
-
+    public Long getAwaiterCount() {
+        return Long.valueOf(awaiters.size());
+    }
     public void update(UpdatedPostInfo updatedPostInfo) {
         this.postInfo = updatedPostInfo.postInfo();
     }
@@ -67,6 +68,8 @@ public class PostDomain {
                 postInfo.qualification(),
                 postInfo.awardScale(),
                 postInfo.host(),
+                postInfo.applicationMethod(),
+                postInfo.applicationEmail(),
                 postInfo.hostHomepageURL(),
                 postInfo.postFields(),
                 newStatus  // 여기서 새로운 상태를 설정합니다.

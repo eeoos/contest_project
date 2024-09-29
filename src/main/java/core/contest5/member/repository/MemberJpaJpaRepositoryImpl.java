@@ -1,5 +1,6 @@
 package core.contest5.member.repository;
 
+import core.contest5.admin.domain.SuspensionStatus;
 import core.contest5.member.domain.*;
 import core.contest5.member.domain.memberinfo.MemberRole;
 import core.contest5.member.service.MemberDomain;
@@ -9,7 +10,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,7 +29,16 @@ public class MemberJpaJpaRepositoryImpl implements MemberRepository {
                 .profileImage(memberInfo.profileImage())
                 .memberField(memberInfo.memberField())
                 .memberDuty(memberInfo.memberDuty())
+                .school(memberInfo.school())
                 .grade(memberInfo.grade())
+                .major(memberInfo.major())
+                .techStacks(Collections.emptySet())
+                .certificates(Collections.emptySet())
+                .awardFileNames(Collections.emptySet())
+                .contestEntries(Collections.emptySet())
+                .warningCount(0)
+                .suspensionStatus(SuspensionStatus.ACTIVE)
+                //suspensionEndTime 넣지 않아도 되는지?
                 .build());
 
         return memberJpaRepository.save(member).getId();
@@ -68,11 +80,20 @@ public class MemberJpaJpaRepositoryImpl implements MemberRepository {
                 .certificates(domain.getMemberInfo().certificates())
                 .awardFileNames(domain.getMemberInfo().awards())
                 .contestEntries(domain.getMemberInfo().contestEntries())
+                .warningCount(domain.getWarningCount())
+                .suspensionStatus(domain.getStatus())
+                .suspensionEndTime(domain.getSuspensionEndTime())
                 .createdAt(existingMember.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
 
         memberJpaRepository.save(updatedMember);
+    }
+
+    @Override
+    public Long countMembersJoinedToday() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        return memberJpaRepository.countMembersJoinedToday(startOfDay);
     }
 }

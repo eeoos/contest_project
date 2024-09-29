@@ -1,6 +1,7 @@
 package core.contest5.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import core.contest5.admin.domain.SuspensionStatus;
 import core.contest5.member.domain.memberinfo.*;
 import core.contest5.member.service.MemberDomain;
 import core.contest5.member.service.MemberInfo;
@@ -117,6 +118,25 @@ public class Member implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    private int warningCount;
+
+    @Enumerated(EnumType.STRING)
+    private SuspensionStatus suspensionStatus;
+
+    private LocalDateTime suspensionEndTime;
+    /*
+    public void increaseWarningCount() {
+        this.warningCount++;
+    }
+
+    public void setSuspensionStatus(SuspensionStatus status) {
+        this.suspensionStatus = status;
+    }
+
+    public void setSuspensionEndTime(LocalDateTime endTime) {
+        this.suspensionEndTime = endTime;
+    }
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -127,16 +147,6 @@ public class Member implements UserDetails {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    /*public void addTechStack(TechStack techStack) {
-        techStacks.add(techStack);
-        techStack.setMember(this);
-    }
-
-    public void removeTechStack(TechStack techStack) {
-        techStacks.remove(techStack);
-        techStack.setMember(null);
-    }*/
 
     public MemberDomain toDomain() {
         return new MemberDomain(
@@ -156,9 +166,11 @@ public class Member implements UserDetails {
                         awardFileNames,
                         contestEntries
                 ),
-
                 createdAt,
-                updatedAt
+                updatedAt,
+                warningCount,
+                suspensionStatus,
+                suspensionEndTime
         );
     }
 
@@ -178,6 +190,9 @@ public class Member implements UserDetails {
                 .certificates(domain.getMemberInfo().certificates())
                 .contestEntries(domain.getMemberInfo().contestEntries())
                 .awardFileNames(domain.getMemberInfo().awards())
+                .warningCount(domain.getWarningCount())
+                .suspensionStatus(domain.getStatus())
+                .suspensionEndTime(domain.getSuspensionEndTime())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();
